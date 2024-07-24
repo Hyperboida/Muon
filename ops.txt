@@ -1,0 +1,14 @@
+format: <opcode 2b> <mod 1b> <size 1b (applies to registers)> <operands ?b>
+
+
+# arithmetic operators
+add
+sub
+mul
+div
+addf
+subf
+mulf
+divf
+
+
