@@ -1,15 +1,15 @@
 CC=gcc
 build=build
-incl:=-Iinclude/ -Ilibs/extlib/include/
+incl:=-Iinclude/ $(addprefix -I, $(wildcard deps/*/include/))
 flags=-g $(incl)
 src=src
 out=out
-libs := $(wildcard libs/extlib/cmake/bin/lib/*.a)
+libs = $(shell find deps -name "*.a")
 files := $(subst src, build, $(patsubst %.c, %.o, $(wildcard $(src)/*.c)))
 $(build)/%.o: $(src)/%.c
-	$(CC) -c $(flags) -o $(build)/$*.o $(src)/$*.c $(libs)
-$(build)/$(out): $(files) $(libs) $(build)
-	$(CC) $(flags) -o $(build)/$(out) $(filter-out $(build), $^) 
+	$(CC) -c $(flags) -o $(build)/$*.o $(src)/$*.c
+$(build)/$(out): $(files) $(build)
+	$(CC) $(flags) -o $(build)/$(out) $(filter-out $(build), $^) $(libs) 
 	
 $(build):
 	mkdir build

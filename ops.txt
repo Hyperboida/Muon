@@ -1,14 +1,58 @@
-format: <opcode 2b> <mod 1b> <size 1b (applies to registers)> <operands ?b>
+format: <opcode 2b> <mod 1b> <size 1b (applies to registers)> <operands>
 
+bin format:
+
+MUON <data section> <code section>
+data:
+    <span><program_data><symbols><platforms>
+    .span: //extra data for spans within the program (for example marking a function definition or a if statement)
+        <labal> <start> <span_length> <replacement_length> <replacement_data>
+        //common labels: if, else, function, struct, loop, etc. these are not specifically defined  
+    .program_data: //data section in typical programs
+    .symbols: // symbol table
+    .platforms: //os-specefic span replacements
+        .windows
+        .macos
+        .linux
+        .xxx //oses are defined arbitralily 
+code: 
 
 # arithmetic operators
-add
+add/i/f
 sub
-mul
-div
-addf
-subf
-mulf
-divf
+mul/i/f
+div/i/f
+inc
+dec
+pow
+# branching
+cmp
+jmp
+jeq //equal
+jnq //not equal
+jg //greater than
+jl //less than
+jge //greater than or equal too
+jle //less than or equal too
+# bitwise ops
+and
+or
+xor
+not
+lsh
+rsh
+
+# functionality
+mov
+movf
+call
+push
+pop
+lea
+
+#registers
+r1-r256 //general registers
+a1-a256 //argument registers (only use to pass things to functions)
+f1-f256 //floating point registers
 
 
