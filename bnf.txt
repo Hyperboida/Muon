@@ -1,0 +1,14 @@
+
+expr = (label | instr)*
+label = id ':'
+instr = opcode operand* "\n"
+opcode = "mov" | "add" ...
+operand = deref | register | literal
+deref = "[" id | register | literal "]"
+register = (r | a | f) [0-255]
+literal = num | hex | bin | character
+num = [1-9] [0-9]*
+hex = "0x" ([0-9] | [a-z] | [A-Z])*
+bin = "0b" (0 | 1)*
+character = "'" [a-z] | [A-Z] "'"
+
