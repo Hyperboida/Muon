@@ -1,4 +1,4 @@
-format: <opcode 2b> <mod 1b> <size 1b (applies to registers)> <operands>
+format: <opcode 1b> <mod 2b> <size 1b (applies to registers)> <operands 4b each>
 
 bin format:
 
@@ -18,7 +18,7 @@ data:
 code: 
 
 # arithmetic operators
-add/i/f
+add/i/f //add -> unsigned integer addition, addi -> signed integer, addf -> signed floating point
 sub
 mul/i/f
 div/i/f
