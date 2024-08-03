@@ -54,5 +54,5 @@ lea
 r1-r256 //general registers
 a1-a256 //argument registers (only use to pass things to functions)
 f1-f256 //floating point registers
-
+mm1-mm256 //vector/SIMD registers
 
