@@ -1,0 +1,5 @@
+module muon::external;
+
+fn char[] convert(char[] data, Converter conv) @export;
+fn char[] assemble(char[] data, Converter conv) @export;
+
