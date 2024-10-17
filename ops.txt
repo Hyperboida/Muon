@@ -1,25 +1,24 @@
-format: <opcode 1b> <mod 2b> <size 1b (applies to registers)> <operands 4b each>
+format: <opcode 1b> <mod 2b> <size 1b (the bytes of each data)> <operands size bytes each>
 
 bin format:
 
-MUON <data section> <code section>
-data:
-    <span><program_data><symbols><platforms>
+MUON <text section> <bss section> <data section>
+    <span><program_data><symbols><platforms> //header data
     .span: //extra data for spans within the program (for example marking a function definition or a if statement)
         <labal> <start> <span_length> <replacement_length> <replacement_data>
         //common labels: if, else, function, struct, loop, etc. these are not specifically defined  
-    .program_data: //data section in typical programs
     .symbols: // symbol table
     .platforms: //os-specefic span replacements
         .windows
         .macos
         .linux
         .xxx //oses are defined arbitralily 
-code: 
-
+.text //no order
+.bss
+.data
 # arithmetic operators
 add/i/f //add -> unsigned integer addition, addi -> signed integer, addf -> signed floating point
-sub
+sub/i/f
 mul/i/f
 div/i/f
 inc
@@ -44,7 +43,6 @@ rsh
 
 # functionality
 mov
-movf
 call
 push
 pop
