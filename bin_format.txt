@@ -1,13 +1,13 @@
 MUON
 <version 4b>
-<alignment: 1b>
-<start>//no byte number implies the number of bytes in alignment
-//start is the offset to the first block
+<alignment: 1b> //possible values are 1, 2, 4, 8 (will expand if integer sizes increase in the future)
+//no byte number implies the number of bytes in alignment (<...> is equal to <...: ab>)
+<offset: 4b> //offset to the first block
 
 //block format: <major: 1b><minor: a-1b><length><data: ?b>
     //major type: the overall format of the data (text, table, span, data, etc.)
-    //minor type: the specefic block type (any of the major types, platform, etc.)
-//symbol table format: <size><string: ?b><index>
+    //minor type: the specific block type (platform, etc.) 0: the same as the major type, or is a general block of that type
+//symbol table format: <size><string: ?b><ptr>
 //block types:
 .symspn //span symbol table, table: span
 .span //span: span 

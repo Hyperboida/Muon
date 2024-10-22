@@ -1,3 +1,3 @@
-module muon;
-
+module muon::parser;
+import muon::type;
 
