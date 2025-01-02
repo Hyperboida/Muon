@@ -1,6 +1,0 @@
-module muon::external;
-def MuSize = uint;
-def Byte = char;
-fn char[] convert(char[] data, Converter conv) @export;
-fn char[] assemble(char[] data, Converter conv) @export;
-
