@@ -1,32 +1,32 @@
 MUON
-<version 4b>
-<alignment: 1b> //possible values are 1, 2, 4, 8 (will expand if integer sizes increase in the future)
-//no byte number implies the number of bytes in alignment (<...> is equal to <...: ab>)
-<offset: 4b> //offset to the first block
+<version 2b>
+<mode: 1b>
+        <endian: 1bit> //0: little-endian, 1: big-endian
+        <type: 2bit> //0: object, 1: executable, 2: relocatable, 3: shared
+        <class: 1bit> //0: 32-bit, 1: 64-bit
+        //... the rest are not yet reserved
+</mode>
+<section count: 4b>
+<res: 4b>
+<section_table_offset: ?b> //?b means either 4 or 8 bytes based on the class size
 
-//block format: <major: 1b><minor: a-1b><length><data: ?b>
-    //major type: the overall format of the data (text, table, span, data, etc.)
-    //minor type: the specific block type (platform, etc.) 0: the same as the major type, or is a general block of that type
-//symbol table format: <size><string: ?b><ptr>
-//block types:
-.symspn //span symbol table, table: span
-.span //span: span 
-.symtbl //table: text
-.text //text: text
-.platsym //table: platform
-.platform //span: platform
-//etc...
+<section_table>
+        <type: 1b> //0: .data, 1: .text, 2: .bss, 3: .symtab, 4: .reloc, 5: .debug, ... rest unused
+        <offset: ?b>
+        <size: ?b>
+        <flags: 1b> //[0]: executable, [1]: writable, [2]: readable [3]: exclude, ... rest unused
+</section_table>
 
-//instruction format: (instructions are not alignment sized!)<opcode: 1b><mod: 2b><displ?><displ?><size: 1b><op1><op2>
-//there are (alignment/4)*8 number of registers available at any time with 4 types, r: general, a: argument, f: floating point, and mm: vector (may be mapped to general registers if simd is not available) they are also variable width, (down to 1 bit) which is defined by the 'size' byte.
-//for example if alignment is 2 bytes then the format for registers would be <r: 4bits><a: 4bits><f: 4bits><mm: 4bits> which means there are 128 registers (the register width is defined by size, where max width is alignment)
-//operands can be larger than alignment depending on 'size' (which must be a power of 2)
-//if they are larger than they are split among the alignment size
+<.text>
+//this is the opcode format
+<opcode: 1b><mode: 1b> <paramaters>
+//mode: [0-4]: addressing modes, [5-7]: immediate sizes
+//modes: 0: immediate, 1: register direct, 2: register indirect, 3: register indirect with offset, 4: base+index,
+5: base+index+offset, 6: memory direct, 7: PC-relative, 8: stack-relative, 9: stack-relative with offset, 10: scaled index, 11: segmented, 12: indirect immediate
 
-//mod format: first byte: type of data for the two arguments (register, register deref, pointer, constant)
-//second byte: other flags:
-//bit 0: has displacement (op1)
-//1: displ (op2)
-//2: SIB
-//3: SIB
-//4-7: not yet assigned
+</.text>
+
+
+
+
+

@@ -1,22 +1,7 @@
-format: <opcode 1b> <mod 2b> <size 1b (the bytes of each data)> <operands size bytes each>
 
-bin format:
-
-MUON <text section> <bss section> <data section>
-    <span><program_data><symbols><platforms> //header data
-    .span: //extra data for spans within the program (for example marking a function definition or a if statement)
-        <labal> <start> <span_length> <replacement_length> <replacement_data>
-        //common labels: if, else, function, struct, loop, etc. these are not specifically defined  
-    .symbols: // symbol table
-    .platforms: //os-specefic span replacements
-        .windows
-        .macos
-        .linux
-        .xxx //oses are defined arbitralily 
-.text //no order
-.bss
-.data
 # arithmetic operators
+# parameters are variable in size, registers are 4 bytes, immediates are dictated by the size bits (from 1-16)
+# memory addresses are class size
 add/i/f //add -> unsigned integer addition, addi -> signed integer, addf -> signed floating point
 sub/i/f
 mul/i/f
@@ -48,9 +33,10 @@ push
 pop
 lea
 
+
 #registers
 r1-r256 //general registers
 a1-a256 //argument registers (only use to pass things to functions)
 f1-f256 //floating point registers
-mm1-mm256 //vector/SIMD registers
+mm1-mm256 //vector/SIMD registers, not currently supported
 
