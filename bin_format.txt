@@ -23,7 +23,7 @@ MUON
 //operands can be larger than alignment depending on 'size' (which must be a power of 2)
 //if they are larger than they are split among the alignment size
 
-//mod format: first byte: type of data for registers (register, register deref, pointer, constant)
+//mod format: first byte: type of data for the two arguments (register, register deref, pointer, constant)
 //second byte: other flags:
 //bit 0: has displacement (op1)
 //1: displ (op2)
