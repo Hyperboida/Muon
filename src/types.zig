@@ -1,22 +1,27 @@
 const std = @import("std");
-const Header = struct {
-    version: u16,
+
+pub const uclass = u64;
+pub const iclass = i64;
+
+pub const Header = struct {
+    version: u32,
     s_count: u32,
-    endian: u1,
-    obj_type: u2,
-    class: u1
+    endian: std.builtin.Endian,
+    obj_type: enum{Obj, Exe, Reloc, Shared},
+    class: enum {x32, x64},
+    s_table_offset: uclass
 
 };
 
-const SectionFlags = packed struct {
+pub const SectionFlags = packed struct {
     executable: bool,
     writable: bool,
     readable: bool,
     exclude: bool,
 };
 
-const SectionData = union(enum) {
-    Data: []const u8,
+pub const SectionData = union(enum) {
+    Data: []u8,
     Text: []Instr,
     //Bss,
     //SymTab,
@@ -24,14 +29,12 @@ const SectionData = union(enum) {
     //Debug
 };
 
-const SectionTableEntry = struct {
-    offset: u64,
-    size: u64,
+pub const SectionTableEntry = struct {
     flags: SectionFlags,
     s_data: SectionData
 };
 
-const SectionTable = struct {
+pub const SectionTable = struct {
     sections: std.ArrayList(SectionTableEntry)   
 };
 
@@ -41,67 +44,62 @@ pub const MuonObject = struct {
 
 };
 
-const Instr = struct {
-    opcode: Opcode,
-    mode: u8,
-};
 
-const Immediate = union(enum) {
+pub const Immediate = union(enum) {
     b1: u8,
     b2: u16,
     b4: u32,
     b8: u64,
-    b16: u128
 };
 
-const Register = union(enum) {
+pub const Register = union(enum) {
     r: u8,
     a: u8,
     f: u8,
-    mm: u8
+    mm: u8 //unsupported
 };
 
-const Dest = union(enum) {
+pub const Dest = union(enum) {
     Register: Register,
-    DirectMemory: u64,
+    DirectMemory: uclass,
     IndirectMemory: Register,
     BaseAddressing: struct {
         base_reg: Register, 
-        disp: i64
+        disp: iclass
     },
     IndexedAddressing: struct {
         base_reg: Register,
         index_reg: Register,
         scale: u8,
-        displ: i64
+        displ: iclass
     },
-    PCRelative: i64,
-    StackAddressing: i64
+    PCRelative: iclass,
+    StackAddressing: iclass
 };
 
-const Src = union(enum) {
+pub const Src = union(enum) {
     Register: Register,
-    DirectMemory: u64,
+    DirectMemory: uclass,
     IndirectMemory: Register,
     BaseAddressing: struct {
         base_reg: Register, 
-        disp: i64
+        disp: iclass
     },
     IndexedAddressing: struct {
         base_reg: Register,
         index_reg: Register,
         scale: u8,
-        displ: i64
+        displ: iclass
     },
-    PCRelative: i64,
-    StackAddressing: i64,
+    PCRelative: iclass,
+    StackAddressing: iclass,
     Immediate: Immediate
 
 };
 
-const DestSrc = .{Dest, Src};
+pub const DestSrc = struct{Dest, Src};
 
-const Opcode = union(enum) {
+pub const Instr = union(enum) {
     Add: DestSrc,
     AddI: DestSrc,
     AddF: DestSrc,
