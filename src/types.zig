@@ -46,55 +46,42 @@ pub const MuonObject = struct {
 
 
 pub const Immediate = union(enum) {
-    b1: u8,
-    b2: u16,
-    b4: u32,
-    b8: u64,
+    b8: u8,
+    b16: u16,
+    b32: u32,
+    b64: u64,
 };
 
 pub const Register = union(enum) {
-    r: u8,
-    a: u8,
-    f: u8,
-    mm: u8 //unsupported
+    r: u32,
+    a: u32,
+    f: u32,
+    mm: u32 //unsupported
 };
 
 pub const Dest = union(enum) {
-    Register: Register,
-    DirectMemory: uclass,
-    IndirectMemory: Register,
-    BaseAddressing: struct {
-        base_reg: Register, 
-        disp: iclass
-    },
-    IndexedAddressing: struct {
+    RegisterDirect: Register,
+    RegisterIndirect: Register,
+    RegisterIndirectOffset: struct {
         base_reg: Register,
-        index_reg: Register,
-        scale: u8,
-        displ: iclass
+        offset: iclass
     },
+    MemoryDirect: uclass,
     PCRelative: iclass,
-    StackAddressing: iclass
+    StackRelative: iclass,
 };
 
 pub const Src = union(enum) {
-    Register: Register,
-    DirectMemory: uclass,
-    IndirectMemory: Register,
-    BaseAddressing: struct {
-        base_reg: Register, 
-        disp: iclass
-    },
-    IndexedAddressing: struct {
+    Immediate: Immediate,
+    RegisterDirect: Register,
+    RegisterIndirect: Register,
+    RegisterIndirectOffset: struct {
         base_reg: Register,
-        index_reg: Register,
-        scale: u8,
-        displ: iclass
+        offset: iclass
     },
+    MemoryDirect: uclass,
     PCRelative: iclass,
-    StackAddressing: iclass,
-    Immediate: Immediate
-
+    StackRelative: iclass,
 };
 
 pub const DestSrc = struct{Dest, Src};

@@ -76,7 +76,6 @@ fn parse_header(comptime R: type, creader: *std.io.CountingReader(R)) !types.Hea
     const mode = try reader.readByte(); //<mode: 1b>
     const endian = if (mode & 0x01 == 1) std.builtin.Endian.big else std.builtin.Endian.little;
     const class: u8 = if ((mode & 0x8) == 8) 8 else 4;
-    std.debug.print("class: {}\n", .{mode & 0x8});
     const s_count = try reader.readInt(u32, endian); //<section_count: 4b>
     _ = try reader.skipBytes(5, .{}); //skip reserved bytes (also aligns it to a four byte boundry)
     const s_table_offset = try reader.readVarInt(uclass, endian, class); //The offset of the section_table
@@ -98,6 +97,26 @@ fn parse_header(comptime R: type, creader: *std.io.CountingReader(R)) !types.Hea
 
 }
 
-fn parse_text(reader: anytype, header: types.Header) ![]types.Instr {
-     
+fn parse_register(reader: anytype, header: *types.Header) ![]types.Register {
+    const max = std.math.maxInt(u32);
+    const register = reader.readInt(u32, header.endian);
+    return switch(register) {
+        0...max/4 => .{.r=register},
+        max/4...max/2 => .{.a=register},
+        max/2...(max*3)/4 => .{.f=register},
+        (max*3)/4...max => error.NotSupported
+
+    };
+}
+
+fn parse_text(reader: anytype, header: *types.Header) ![]types.Instr {
+    const opcode = try reader.readByte();
+    const mode = try reader.readByte();
+    const dest: types.Dest = switch(mode & 0b0011) {
+        1 => .RegisterDirect{parse_register(&reader, header)},
+        2 => .RegisterIndirect{parse_register(&reader, header)},
+        3 => .RegisterIndirectOffset{parse_register(&reader, header), try reader.readVarInt(types.iclass, header.class, header.endian)},
+        5 => .PCRelative{try reader.readVarInt(types.iclass, header.class, header.endian)},
+        6 => .StackRelative{try reader.readVarInt(types.iclass, header.class, header.endian)}
+    };
 }
