@@ -1,11 +1,8 @@
-const std = @import("std");
-const bin = @import("bin/parser.zig");
-const testing = std.testing;
 const types = @import("types");
-export fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
-
-test "basic add functionality" {
-    try testing.expect(add(3, 7) == 10);
+const bin = @import("bin/parser.zig");
+const emit = @import("bin/emit.zig");
+const builder = @import("bin/builder.zig");
+comptime {
+    const std = @import("std");
+    std.testing.refAllDecls(@This());
 }

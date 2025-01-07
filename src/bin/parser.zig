@@ -1,7 +1,7 @@
 const std = @import("std");
 const types = @import("../types.zig");
 const uclass = types.uclass;
-
+const sp_version = @import("../types.zig").SPEC_VERSION;
 ///Converts an array of bytes into a MuonObject. The bytes must be a valid muon object.
 pub fn parse(bin: []const u8) !types.MuonObject {
     var fbs = std.io.fixedBufferStream(bin);
@@ -73,12 +73,12 @@ fn parse_header(comptime R: type, creader: *std.io.CountingReader(R)) !types.Hea
     var reader = creader.reader();
     if (!try reader.isBytes("MUON")) return error.InvalidMagic;
     const version = try reader.readInt(u32, std.builtin.Endian.little); //<version: 4b>
+    if(version != sp_version) return error.InvalidVersion;
     const mode = try reader.readByte(); //<mode: 1b>
     const endian = if (mode & 0x01 == 1) std.builtin.Endian.big else std.builtin.Endian.little;
     const class: u8 = if ((mode & 0x8) == 8) 8 else 4;
     const s_count = try reader.readInt(u32, endian); //<section_count: 4b>
     _ = try reader.skipBytes(5, .{}); //skip reserved bytes (also aligns it to a four byte boundry)
-    const s_table_offset = try reader.readVarInt(uclass, endian, class); //The offset of the section_table
     const header = types.Header {
         .version = version,
         .s_count = s_count,
@@ -91,7 +91,6 @@ fn parse_header(comptime R: type, creader: *std.io.CountingReader(R)) !types.Hea
             else => return error.InvalidObjectType
         },
         .class = if (class == 4) .x32 else .x64,
-        .s_table_offset = s_table_offset
     };
     return header;
 
@@ -109,14 +108,82 @@ fn parse_register(reader: anytype, header: *types.Header) ![]types.Register {
     };
 }
 
-fn parse_text(reader: anytype, header: *types.Header) ![]types.Instr {
-    const opcode = try reader.readByte();
-    const mode = try reader.readByte();
-    const dest: types.Dest = switch(mode & 0b0011) {
+fn parse_dest(mode: u8, reader: anytype, header: *types.Header) !types.Dest {
+    return switch(mode & 0b0111) {
         1 => .RegisterDirect{parse_register(&reader, header)},
         2 => .RegisterIndirect{parse_register(&reader, header)},
         3 => .RegisterIndirectOffset{parse_register(&reader, header), try reader.readVarInt(types.iclass, header.class, header.endian)},
         5 => .PCRelative{try reader.readVarInt(types.iclass, header.class, header.endian)},
         6 => .StackRelative{try reader.readVarInt(types.iclass, header.class, header.endian)}
+    };
+}
+
+fn parse_immediate(mode: u8, reader: anytype, header: *types.Header) !types.Immediate {
+    return switch(mode & 0b11000000) {
+        0 => .{.b8 = try reader.readByte()},
+        1 => .{.b16 = try reader.readInt(u16, header.endian)},
+        2 => .{.b32 = try reader.readInt(u32, header.endian)},
+        3 => .{.b64 = try reader.readInt(u64, header.endian)}
+    };
+}
+
+fn parse_src(mode: u8, reader: anytype, header: *types.Header) !types.Src {
+    return switch(mode & 0b00111000) {
+        0 => .Immediate{parse_immediate(mode, &reader, header)},
+        1 => .RegisterDirect{parse_register(&reader, header)},
+        2 => .RegisterIndirect{parse_register(&reader, header)},
+        3 => .RegisterIndirectOffset{parse_register(&reader, header), try reader.readVarInt(types.iclass, header.class, header.endian)},
+        4 => .MemoryDirect{try reader.readVarInt(types.uclass, header.class, header.endian)},
+        5 => .PCRelative{try reader.readVarInt(types.iclass, header.class, header.endian)},
+        6 => .StackRelative{try reader.readVarInt(types.iclass, header.class, header.endian)},
+    };
+}
+fn parse_dest_src(mode: u8, reader: anytype, header: *types.Header) !types.DestSrc{
+        return .{parse_dest(mode, reader, header), parse_src(mode, reader, header)};
+}
+
+fn parse_text(reader: anytype, header: *types.Header) ![]types.Instr {
+   _ = reader;
+   _ = header;
+}
+fn parse_instr(reader: anytype, header: *types.Header) !types.Instr {
+    const opcode = try reader.readByte();
+    const mode = try reader.readByte();
+    return switch(@as(@enumFromInt(opcode), types.Opcode)) {
+        .Nop => .Nop,
+        .Add => .Add{parse_dest_src(mode, reader, header)},
+        .AddI => .AddI{parse_dest_src(mode, reader, header)},
+        .AddF => .AddF{parse_dest_src(mode, reader, header)},
+        .Sub => .Sub{parse_dest_src(mode, reader, header)},
+        .SubI => .SubI{parse_dest_src(mode, reader, header)},
+        .SubF => .SubF{parse_dest_src(mode, reader, header)},
+        .Mul => .Mul{parse_dest_src(mode, reader, header)},
+        .MulI => .MulF{parse_dest_src(mode, reader, header)},
+        .MulF => .MulF{parse_dest_src(mode, reader, header)},
+        .Div => .Div{parse_dest_src(mode, reader, header)},
+        .DivI => .DivI{parse_dest_src(mode, reader, header)},
+        .DivF => .DivF{parse_dest_src(mode, reader, header)},
+        .Inc => .Inc{parse_dest(mode, reader, header)},
+        .Dec => .Dec{parse_dest(mode, reader, header)},
+        .Cmp => .Cmp{parse_dest_src(mode, reader, header)},
+        .Jmp => .Jmp{parse_src(mode, reader, header)},
+        .Jeq => .Jeq{parse_src(mode, reader, header)},
+        .Jnq => .Jnq{parse_src(mode, reader, header)},
+        .Jg => .Jg{parse_src(mode, reader, header)},
+        .Jl => .Jl{parse_src(mode, reader, header)},
+        .Jge => .Jge{parse_src(mode, reader, header)},
+        .Jle => .Jle{parse_src(mode, reader, header)},
+        .And => .And{parse_dest_src(mode, reader, header)},
+        .Or => .Or{parse_dest_src(mode, reader, header)},
+        .Xor => .Xor{parse_dest_src(mode, reader, header)},
+        .Not => .Not{parse_dest_src(mode, reader, header)},
+        .Lsh => .Lsh{parse_dest_src(mode, reader, header)},
+        .Rsh => .Rsh{parse_dest_src(mode, reader, header)},
+        .Mov => .Mov{parse_dest_src(mode, reader, header)},
+        .Call => .Call{parse_src(mode, reader, header)},
+        .Push => .Push{parse_src(mode, reader, header)},
+        .Pop => .Pop{parse_dest(mode, reader, header)},
+        .Lea => .Lea{parse_dest_src(mode, reader, header)},
+        
     };
 }

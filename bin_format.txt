@@ -8,7 +8,7 @@ MUON
 </mode>
 <section_count: 4b> //must be at least 1
 <res: 5b> //currently just used for alignment
-<section_table_offset: ?b> //?b means either 4 or 8 bytes based on the class size
+//?b means either 4 or 8 bytes based on the class size
 
 <section_table>
         <type: 1b> //0: .data, 1: .text, 2: .bss, 3: .symtab, 4: .reloc, 5: .debug, ... rest unused
@@ -19,9 +19,9 @@ MUON
 
 <.text>
         //this is the opcode format
-        <opcode: 1b><mode: 1b> <parameters> (uses intel syntax)
+        <opcode: 1b><mode: 1b> <param1?> <offset?> <param2?> <offset?> (uses intel syntax)
         //mode: [0-2]: addressing mode 1, [3-5]: addressing mode 2, [6-7]: immediate size
-        //modes: 0: immediate (only for some), 1: register direct, 2: register indirect, 3: register indirect with offset, 4: memory direct, 5: PC-relative, 6: stack-relative, 7: scaled index, 
+        //modes: 0: immediate (only for param1), 1: register direct, 2: register indirect, 3: register indirect with offset, 4: memory direct (a immediate treated as a pointer), 5: PC-relative, 6: stack-relative, 
 </.text>
 
 
